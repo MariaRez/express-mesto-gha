@@ -1,9 +1,21 @@
 const Card = require('../models/card');
 
+const ValidationError = require('../errors/ValidationError');
+const NotFoundError = require('../errors/NotFoundError');
+const DefaultError = require('../errors/DefaultError');
+
+const validationError = new ValidationError('Переданы некорректные данные в методы создания карточки, удаления карточки, простановке лайка/дизлайка');
+const notFoundError = new NotFoundError('Карточка не найдена');
+const defaultError = new DefaultError('Ошибка по-умолчанию');
+
+const VALIDATION_ERROR_CODE = 400; // переданы некорректные данные в методы создания карточки и др
+const NOT_FOUND_ERROR_CODE = 404; //  карточка или пользователь не найден
+const DEFAULT_ERROR_CODE = 500; // ошибка по-умолчанию
+
 module.exports.getCards = (req, res) => { // возвращает все карточки
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message }));
 };
 
 module.exports.createCard = (req, res) => { // создаёт карточку
@@ -12,14 +24,28 @@ module.exports.createCard = (req, res) => { // создаёт карточку
 
   Card.create({ name, link, owner: ownerId })
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
+      }
+    });
 };
 
 module.exports.deleteCard = (req, res) => { // удаляет карточку по идентификатору
   const { cardId } = req.params;
   Card.findByIdAndRemove(cardId)
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
+      } if (err.name === 'NotFoundError') {
+        res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
+      }
+    });
 };
 
 module.exports.likeCard = (req, res) => { // поставить лайк карточке
@@ -29,7 +55,15 @@ module.exports.likeCard = (req, res) => { // поставить лайк кар�
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
+      } if (err.name === 'NotFoundError') {
+        res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
+      }
+    });
 };
 
 module.exports.dislikeCard = (req, res) => { // убрать лайк с карточки
@@ -39,5 +73,13 @@ module.exports.dislikeCard = (req, res) => { // убрать лайк с кар�
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
+      } if (err.name === 'NotFoundError') {
+        res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
+      }
+    });
 };
