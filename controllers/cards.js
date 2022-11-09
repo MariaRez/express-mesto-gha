@@ -21,3 +21,23 @@ module.exports.deleteCard = (req, res) => { // удаляет карточку �
     .then((card) => res.send({ data: card }))
     .catch((err) => res.status(500).send({ message: err.message }));
 };
+
+module.exports.likeCard = (req, res) => { // поставить лайк карточке
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { new: true },
+  )
+    .then((card) => res.send({ data: card }))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
+
+module.exports.dislikeCard = (req, res) => { // убрать лайк с карточки
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } }, // убрать _id из массива
+    { new: true },
+  )
+    .then((card) => res.send({ data: card }))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
