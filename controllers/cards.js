@@ -38,10 +38,10 @@ module.exports.deleteCard = (req, res) => { // удаляет карточку �
   Card.findByIdAndRemove(cardId)
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      if (err.errorCode === NOT_FOUND_ERROR_CODE) {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } if (err.name === 'CastError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
       }
@@ -56,10 +56,10 @@ module.exports.likeCard = (req, res) => { // поставить лайк кар�
   )
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      if (err.errorCode === NOT_FOUND_ERROR_CODE) {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } if (err.name === 'CastError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
       }
@@ -74,10 +74,10 @@ module.exports.dislikeCard = (req, res) => { // убрать лайк с кар�
   )
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      if (err.errorCode === NOT_FOUND_ERROR_CODE) {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } if (err.name === 'CastError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
       }

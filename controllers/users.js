@@ -23,9 +23,9 @@ module.exports.getUser = (req, res) => { // возвращает пользов�
   User.findById(userId)
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      } if (err.errorCode === NOT_FOUND_ERROR_CODE) {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
@@ -50,13 +50,13 @@ module.exports.createUser = (req, res) => { // создаёт пользоват
 module.exports.updateProfile = (req, res) => { // обновляет профиль
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      if (err.name === 'NotFoundError') {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
       }
@@ -66,13 +66,13 @@ module.exports.updateProfile = (req, res) => { // обновляет профи�
 module.exports.updateAvatar = (req, res) => { // обновляет аватар
   const { avatar } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
-      } if (err.name === 'NotFoundError') {
+      if (err.name === 'NotFoundError') {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundError.message });
+      } if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: validationError.message });
       } else {
         res.status(DEFAULT_ERROR_CODE).send({ message: defaultError.message });
       }
