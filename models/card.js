@@ -13,7 +13,7 @@ const cardSchema = new mongoose.Schema({ // схема карточки
   },
   owner: { // ссылка на модель автора карточки, тип ObjectId, обязательное поле
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'owner',
+    ref: 'user',
     required: true,
   },
   likes: [{ // список, массив ObjectId, по умолчанию — пустой массив (поле default);
