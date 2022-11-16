@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 
 const ValidationError = require('../errors/ValidationError');
@@ -14,7 +15,7 @@ module.exports.getUsers = (req, res) => { // возвращает всех по�
     .then((users) => res.send({ data: users }))
     .catch(() => res.status(InternalServerErrorCode).send({ message: defaultError.message }));
 };
-// автотесты - неправильный код ответа и сообщение когда получаем несуществующего пользователя
+
 module.exports.getUser = (req, res) => { // возвращает пользователя по _id
   const { userId } = req.params;
   User.findById(userId)
@@ -32,9 +33,14 @@ module.exports.getUser = (req, res) => { // возвращает пользов�
 };
 
 module.exports.createUser = (req, res) => { // создаёт пользователя
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
+  bcrypt.hash(req.body.password, 10) // хешируем пароль
+    .then((hash) => User.create({
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
+      email: req.body.email,
+      password: hash, // записываем хеш в базу
+    }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
