@@ -81,7 +81,7 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res.status(UnauthorizedCode).send({ message: err.message });
+      res.status(UnauthorizedCode).send({ message: err.message }); // скорретировать
     });
 };
 
