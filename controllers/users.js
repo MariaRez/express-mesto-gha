@@ -1,10 +1,13 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
 const DefaultError = require('../errors/DefaultError');
-const { InternalServerErrorCode, BadRequestCode, NotFoundCode } = require('../constants');
+const {
+  InternalServerErrorCode, BadRequestCode, NotFoundCode, CreatedCode, UnauthorizedCode,
+} = require('../constants');
 
 const validationError = new ValidationError('Переданы некорректные данные в методы создания пользователя, обновления аватара пользователя или профиля');
 const notFoundError = new NotFoundError('Пользователь не найден');
@@ -41,13 +44,44 @@ module.exports.createUser = (req, res) => { // создаёт пользоват
       email: req.body.email,
       password: hash, // записываем хеш в базу
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(CreatedCode).send({
+      _id: user._id,
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BadRequestCode).send({ message: validationError.message });
       } else {
         res.status(InternalServerErrorCode).send({ message: defaultError.message });
       }
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      return bcrypt.compare(password, user.password);
+    })
+    .then((user) => {
+      if (!user) { // хеши не совпали — отклоняем промис
+        Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      const token = jwt.sign( // создание токена если была произведена успешная авторизация
+        { _id: user._id },
+        'some-secret-key', // заменить на актуальный по заданию - из тренажера
+        { expiresIn: '7d' }, // токен будет просрочен через неделю после создания
+      );
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(UnauthorizedCode).send({ message: err.message });
     });
 };
 
