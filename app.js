@@ -17,14 +17,6 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 app.post('/signin', login); // POST /signin — авториззация пользователя
 app.post('/signup', createUser); // POST /signup — создаёт пользователя
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '636bb994c2682eba6a6e823e', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-
-  next();
-});
-
 app.use(auth); // авторизация
 
 // роуты, которым авторизация нужна

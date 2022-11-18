@@ -6,7 +6,7 @@ const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
 const DefaultError = require('../errors/DefaultError');
 const {
-  InternalServerErrorCode, BadRequestCode, NotFoundCode, CreatedCode, UnauthorizedCode,
+  InternalServerErrorCode, BadRequestCode, NotFoundCode,
 } = require('../constants');
 
 const validationError = new ValidationError('Переданы некорректные данные в методы создания пользователя, обновления аватара пользователя или профиля');
@@ -36,7 +36,7 @@ module.exports.getUser = (req, res) => { // возвращает пользов�
 };
 
 module.exports.createUser = (req, res) => { // создаёт пользователя
-  bcrypt.hash(req.body.password, 10) // хешируем пароль
+  bcrypt.hash(req.body.password, 10) // хешируем пароль - вынести в константу salt
     .then((hash) => User.create({
       name: req.body.name,
       about: req.body.about,
@@ -44,7 +44,7 @@ module.exports.createUser = (req, res) => { // создаёт пользоват
       email: req.body.email,
       password: hash, // записываем хеш в базу
     }))
-    .then((user) => res.status(CreatedCode).send({
+    .then((user) => res.status(201).send({
       _id: user._id,
       name: user.name,
       about: user.about,
@@ -62,6 +62,7 @@ module.exports.createUser = (req, res) => { // создаёт пользоват
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body);
   User.findOne({ email })
     .then((user) => {
       if (!user) {
@@ -75,13 +76,13 @@ module.exports.login = (req, res) => {
       }
       const token = jwt.sign( // создание токена если была произведена успешная авторизация
         { _id: user._id },
-        'some-secret-key', // заменить на актуальный по заданию - из тренажера
+        'some-secret-key', // заменить на актуальный по заданию - из тренажера - возможно стоит сохранить в константу
         { expiresIn: '7d' }, // токен будет просрочен через неделю после создания
       );
       res.send({ token });
     })
     .catch((err) => {
-      res.status(UnauthorizedCode).send({ message: err.message }); // скорретировать
+      res.status(401).send({ message: err.message }); // скорретировать
     });
 };
 
