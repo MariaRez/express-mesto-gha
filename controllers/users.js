@@ -62,8 +62,7 @@ module.exports.createUser = (req, res) => { // создаёт пользоват
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-  console.log(req.body);
-  User.findOne({ email })
+  User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
         return Promise.reject(new Error('Неправильные почта или пароль'));
@@ -116,6 +115,23 @@ module.exports.updateAvatar = (req, res) => { // обновляет аватар
         res.status(BadRequestCode).send({ message: validationError.message });
       } else {
         res.status(InternalServerErrorCode).send({ message: defaultError.message });
+      }
+    });
+};
+
+module.exports.getInfoAboutCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user._id) {
+        next(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`));
+      }
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(BadRequestCode).send({ message: validationError.message });
+      } else {
+        next(err);
       }
     });
 };
