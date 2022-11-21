@@ -17,6 +17,12 @@ const userSchema = new mongoose.Schema({ // схема карточки
   avatar: { // ссылка на аватарку, строка, обязательное поле
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate(value) { // валидация для аватара пользователя
+      // в случае передачи не подходящих данных будет создана ошибка
+      if (!validator.isUrl(value)) {
+        throw new Error('Передан некорректный формат ссылки');
+      }
+    },
   },
   email: { // почта пользователя, уникальное значение
     type: String,

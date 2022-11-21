@@ -9,7 +9,7 @@ router.get('/', getCards); // GET /cards — возвращает все кар�
 router.post('/', celebrate({ // POST /cards — создаёт карточку
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required().regex(),
+    link: Joi.string().required().pattern(/http[s]?:\/\/(?:www\.)?([\w-]+\.)+\/?\S*$/),
   }),
 }), createCard);
 
