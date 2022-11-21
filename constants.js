@@ -7,5 +7,11 @@ const SALT = 10;
 const DuplicateKeyError = 11000;
 
 module.exports = {
-  Ok, Created, NotFoundCode, BadRequestCode, InternalServerErrorCode, SALT, DuplicateKeyError,
+  Ok,
+  Created,
+  NotFoundCode,
+  BadRequestCode,
+  InternalServerErrorCode,
+  SALT,
+  DuplicateKeyError,
 };

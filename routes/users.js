@@ -7,24 +7,21 @@ const {
 router.get('/', getUsers); // GET /users — возвращает всех пользователей
 
 router.get('/:userId', celebrate({ // GET /users/:userId - возвращает пользователя по _id
-  params: Joi.object().keys({ // валидируем параметры
-    userId: Joi.string().alphanum().length(24), // id пользователя строчный,
-    // состоит из цифр и букв, длинной 24 символа
+  params: Joi.object().keys({
+    userId: Joi.string().hex().length(24),
   }),
 }), getUser);
 
 router.patch('/me', celebrate({ // PATCH /users/me — обновляет профиль
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30), // валидация имени пользователя,
-    // строка, обязательное поле, минимальное кол-во символов 2, макс 30
-    about: Joi.string().required().min(2).max(30), // валидация описания пользователя,
-    // строка, обязательное поле, минимальное кол-во символов 2, макс 30
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
   }),
 }), updateProfile);
 
 router.patch('/me/avatar', celebrate({ // PATCH /users/me — обновляет профиль
   body: Joi.object().keys({
-    avatar: Joi.string().required().regex(), // валидация аватара - необходимо вписать выражение
+    avatar: Joi.string().required().regex(),
   }),
 }), updateAvatar); // PATCH /users/me/avatar — обновляет аватар
 

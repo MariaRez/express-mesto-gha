@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errors, celebrate, Joi } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { NotFoundCode, InternalServerErrorCode } = require('./constants'); // 404 500
@@ -15,14 +16,31 @@ app.use(bodyParser.urlencoded({ extended: true }));
 mongoose.connect('mongodb://localhost:27017/mestodb', {
 });
 
-app.post('/signin', login); // POST /signin — авториззация пользователя
-app.post('/signup', createUser); // POST /signup — создаёт пользователя
+app.post('/signin', celebrate({ // POST /signin — авторизация пользователя
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+app.post('/signup', celebrate({ // POST /signup — создаёт пользователя
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
+    avatar: Joi.string().required().regex(),
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
 
 app.use(auth); // авторизация
 
 // роуты, которым авторизация нужна
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
+
+// celebrate error handler
+app.use(errors());
 
 app.use((req, res) => {
   res.status(NotFoundCode).send({ message: 'Page Not found 404' });
