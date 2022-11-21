@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const { NotFoundCode, InternalServerErrorCode } = require('./constants'); // 404 500
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -24,7 +25,16 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use((req, res) => {
-  res.status(404).send({ message: 'Page Not found 404' });
+  res.status(NotFoundCode).send({ message: 'Page Not found 404' });
+});
+
+app.use((err, req, res, next) => {
+  if (err.errorCode === InternalServerErrorCode) {
+    // если любая возникшая ошибка с кодом 500, сообщи от этом
+    res.status(InternalServerErrorCode).send({ message: 'Сервер столкнулся с неожиданной ошибкой, которая помешала ему выполнить запрос' });
+  } else {
+    next(err);
+  }
 });
 
 app.listen(PORT, () => {

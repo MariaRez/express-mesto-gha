@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { UnauthorizedCode } = require('../constants');
+const { UnauthorizedCode } = require('../constants'); // добавить ошибку
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
