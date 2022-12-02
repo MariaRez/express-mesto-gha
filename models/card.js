@@ -1,4 +1,3 @@
-const validator = require('validator');
 const mongoose = require('mongoose');
 
 const cardSchema = new mongoose.Schema({ // схема карточки
@@ -11,12 +10,6 @@ const cardSchema = new mongoose.Schema({ // схема карточки
   link: { // ссылка на картинку, строка, обязательно поле
     type: String,
     required: true,
-    validate(value) { // валидация для ссылки на картинку
-      // в случае передачи не подходящих данных будет создана ошибка
-      if (!validator.isUrl(value)) {
-        throw new Error('Передан некорректный формат ссылки');
-      }
-    },
   },
   owner: { // ссылка на модель автора карточки, тип ObjectId, обязательное поле
     type: mongoose.Schema.Types.ObjectId,
@@ -32,5 +25,10 @@ const cardSchema = new mongoose.Schema({ // схема карточки
     default: Date.now,
   },
 });
+
+cardSchema.path('link').validate((value) => { // проверка - валидация ссылки
+  const regExpForLink = /http[s]?:\/\/(?:www\.)?([\w-]+\.)+\/?\S*$/;
+  return regExpForLink.test(value);
+}, 'Данная ссылка не проходит условия вадидации. Проверьте формат!');
 
 module.exports = mongoose.model('card', cardSchema);

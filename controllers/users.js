@@ -2,9 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const ValidationError = require('../errors/ValidationError');
-const NotFoundError = require('../errors/NotFoundError');
-const ConflictError = require('../errors/ConflictError');
+const ValidationError = require('../errors/ValidationError'); // 400
+const NotFoundError = require('../errors/NotFoundError'); // 404
+const ConflictError = require('../errors/ConflictError'); // 409
 
 const {
   Ok, Created, SALT, DuplicateKeyError,
@@ -31,6 +31,9 @@ module.exports.getUser = (req, res, next) => { // возвращает поль�
 };
 
 module.exports.createUser = (req, res, next) => { // создаёт пользователя
+  if (!req.body.email || !req.body.password) {
+    next(new ValidationError('Не заполнены обязательные поля'));
+  }
   bcrypt.hash(req.body.password, SALT) // хешируем пароль - вынести в константу salt
     .then((hash) => User.create({
       name: req.body.name,
@@ -39,6 +42,7 @@ module.exports.createUser = (req, res, next) => { // создаёт пользо
       email: req.body.email,
       password: hash, // записываем хеш в базу
     }))
+    .then((user) => User.findOne({ _id: user._id }))
     .then((user) => res.status(Created).send({
       _id: user._id,
       name: user.name,
@@ -47,10 +51,10 @@ module.exports.createUser = (req, res, next) => { // создаёт пользо
       email: user.email,
     }))
     .catch((err) => {
-      if (err.code === DuplicateKeyError) {
-        next(new ConflictError('Пользователь с такими данными уже существует'));
-      } if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при создании пользователя'));
+      } if (err.code === DuplicateKeyError) {
+        next(new ConflictError('Пользователь с такими данными уже существует'));
       } else {
         next(err); // создаст 500
       }
@@ -59,17 +63,8 @@ module.exports.createUser = (req, res, next) => { // создаёт пользо
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  User.findOne({ email }).select('+password')
+  User.findUserByCredentials({ email, password })
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
-      }
-      return bcrypt.compare(password, user.password);
-    })
-    .then((user) => {
-      if (!user) { // хеши не совпали — отклоняем промис
-        Promise.reject(new Error('Неправильные почта или пароль'));
-      }
       const token = jwt.sign( // создание токена если была произведена успешная авторизация
         { _id: user._id },
         'some-secret-key',
@@ -84,7 +79,7 @@ module.exports.updateProfile = (req, res, next) => { // обновляет пр�
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .orFail(new NotFoundError(`Пользователь с указанным id '${req.params.userId}' не найден`))
+    .orFail(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`))
     .then((user) => res.status(Ok).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -99,11 +94,11 @@ module.exports.updateAvatar = (req, res, next) => { // обновляет ава
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .orFail(new NotFoundError(`Пользователь с указанным id '${req.params.userId}' не найден`))
+    .orFail(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`))
     .then((user) => res.status(Ok).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при изменении аватара пользователя'));
+        next(new ValidationError('Переданы некорректные данные при изменение аватара пользователя'));
       } else {
         next(err); // создаст 500
       }
@@ -119,8 +114,8 @@ module.exports.getInfoAboutCurrentUser = (req, res, next) => {
       res.status(Ok).send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при запросе данных текущего пользователя'));
+      if (err.name === 'CastError') {
+        next(new ValidationError('Переданы некорректные данные при запросе пользователя'));
       } else {
         next(err); // создаст 500
       }

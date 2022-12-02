@@ -30,21 +30,15 @@ module.exports.createCard = (req, res, next) => { // создаёт карточ
 module.exports.deleteCard = (req, res, next) => { // удаляет карточку по идентификатору
   const { cardId } = req.params;
   Card.findByIdAndRemove(cardId)
-    .orFail(new NotFoundError(`Карточка указанным с id '${req.params.cardId}' не найдена`))
+    .orFail(new NotFoundError(`Карточка с указанным id '${cardId}' не найдена`))
     .then((card) => {
-      if (!req.user._id === card.owner) { // если пользователь не является владельцем карточки
-        return new ForbiddenError(`У пользователя с id '${req.user._id}' нет прав для удаления данной карточки!`);
+      if (!card.owner === req.user._id) { // если пользователь не является владельцем карточки
+        return next(new ForbiddenError('У данного пользователя нет прав для удаления данной карточки!'));
       }
       return card.remove()
         .then(() => res.status(Ok).send({ message: 'Карточка успешно удалена' }));// выставляем статус и сообщаем что карточка удалена
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при удалении карточки'));
-      } else {
-        next(err); // создаст 500
-      }
-    });
+    .catch(next); // создаст 500
 };
 
 module.exports.likeCard = (req, res, next) => { // поставить лайк карточке
@@ -56,7 +50,7 @@ module.exports.likeCard = (req, res, next) => { // поставить лайк �
     .orFail(new NotFoundError(`Карточка указанным с id '${req.params.cardId}' не найдена`))
     .then((card) => res.status(Ok).send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные при простановке лайка карточке'));
       } else {
         next(err); // создаст 500
@@ -73,8 +67,8 @@ module.exports.dislikeCard = (req, res, next) => { // убрать лайк с �
     .orFail(new NotFoundError(`Карточка указанным с id '${req.params.cardId}' не найдена`))
     .then((card) => res.status(Ok).send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при удаления лайка у карточки'));
+      if (err.name === 'CastError') {
+        next(new ValidationError('Переданы некорректные данные при простановке лайка карточке'));
       } else {
         next(err); // создаст 500
       }
