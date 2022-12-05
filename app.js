@@ -3,18 +3,22 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors, celebrate, Joi } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
-const auth = require('./middlewares/auth');
-const { NotFoundCode, InternalServerErrorCode } = require('./constants'); // 404 500
+const { auth } = require('./middlewares/auth');
+const { NotFoundCode } = require('./constants'); // 404 500
 
 const { PORT = 3000 } = process.env;
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
 // подключаемся к серверу mongo
 mongoose.connect('mongodb://localhost:27017/mestodb', {
 });
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// роуты, которым авторизация нужна
+app.use('/users', auth, require('./routes/users'));
+app.use('/cards', auth, require('./routes/cards'));
 
 app.post('/signin', celebrate({ // POST /signin — авторизация пользователя
   body: Joi.object().keys({
@@ -33,26 +37,21 @@ app.post('/signup', celebrate({ // POST /signup — создаёт пользо�
   }),
 }), createUser);
 
-app.use(auth); // авторизация
-
-// роуты, которым авторизация нужна
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-// celebrate error handler
-app.use(errors());
-
 app.use((req, res) => {
   res.status(NotFoundCode).send({ message: 'Page Not found 404' });
 });
 
+// celebrate error handler
+app.use(errors());
+
 app.use((err, req, res, next) => {
-  if (err.errorCode === InternalServerErrorCode) {
-    // если любая возникшая ошибка с кодом 500, сообщи от этом
-    res.status(InternalServerErrorCode).send({ message: 'Сервер столкнулся с неожиданной ошибкой, которая помешала ему выполнить запрос' });
-  } else {
-    next(err);
-  }
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
+  });
+  next();
 });
 
 app.listen(PORT, () => {
