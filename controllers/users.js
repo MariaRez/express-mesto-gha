@@ -72,7 +72,7 @@ module.exports.login = (req, res, next) => {
         JWT_SECRET,
         { expiresIn: '7d' }, // токен будет просрочен через неделю после создания
       );
-      res.status(Created).send({ token });
+      res.status(Ok).send({ token });
     })
     .catch(next); // создаст 500
 };
