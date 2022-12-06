@@ -5,6 +5,7 @@ const { errors, celebrate, Joi } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const { auth } = require('./middlewares/auth');
 const { NotFoundCode } = require('./constants'); // 404 500
+const handlerErrors = require('./middlewares/handlerErrors');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -43,16 +44,8 @@ app.use((req, res) => {
 
 // celebrate error handler
 app.use(errors());
-
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({
-    message: statusCode === 500
-      ? 'На сервере произошла ошибка'
-      : message,
-  });
-  next();
-});
+// функция обработки ошибок
+app.use(handlerErrors);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
