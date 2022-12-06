@@ -10,6 +10,8 @@ const {
   Ok, Created, SALT, DuplicateKeyError,
 } = require('../constants'); // 200, 201, соль для пароля, ошибка дублирования ключа
 
+const { JWT_SECRET = 'dev-key' } = process.env;
+
 module.exports.getUsers = (req, res, next) => { // возвращает всех пользователей
   User.find({})
     .then((users) => res.status(Ok).send({ data: users }))
@@ -67,7 +69,7 @@ module.exports.login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign( // создание токена если была произведена успешная авторизация
         { _id: user._id },
-        'some-secret-key',
+        JWT_SECRET,
         { expiresIn: '7d' }, // токен будет просрочен через неделю после создания
       );
       res.status(Created).send({ token });
