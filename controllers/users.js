@@ -36,7 +36,7 @@ module.exports.createUser = (req, res, next) => { // создаёт пользо
   if (!req.body.email || !req.body.password) {
     next(new ValidationError('Не заполнены обязательные поля'));
   }
-  bcrypt.hash(req.body.password, SALT) // хешируем пароль - вынести в константу salt
+  bcrypt.hash(req.body.password, SALT) // хешируем пароль
     .then((hash) => User.create({
       name: req.body.name,
       about: req.body.about,

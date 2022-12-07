@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const { errors, celebrate, Joi } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const { auth } = require('./middlewares/auth');
-const { NotFoundCode } = require('./constants'); // 404 500
 const handlerErrors = require('./middlewares/handlerErrors');
+const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -38,8 +38,8 @@ app.post('/signup', celebrate({ // POST /signup — создаёт пользо�
   }),
 }), createUser);
 
-app.use((req, res) => {
-  res.status(NotFoundCode).send({ message: 'Page Not found 404' });
+app.use((req, res, next) => {
+  next(new NotFoundError('Page Not found 404'));
 });
 
 // celebrate error handler
