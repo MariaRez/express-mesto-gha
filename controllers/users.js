@@ -109,15 +109,11 @@ module.exports.updateAvatar = (req, res, next) => { // обновляет ава
 
 module.exports.getInfoAboutCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
-    .then((user) => {
-      if (!user._id) {
-        next(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`));
-      }
-      res.status(Ok).send(user);
-    })
+    .orFail(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`))
+    .then((user) => res.status(Ok).send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new ValidationError('Переданы некорректные данные при запросе пользователя'));
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Переданы некорректные данные при запросе информации о пользователе'));
       } else {
         next(err); // создаст 500
       }
