@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -10,6 +11,8 @@ const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+
+app.use(helmet()); // helmet для ограничения источников скриптов и других ресурсов
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
