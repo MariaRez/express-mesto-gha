@@ -18,6 +18,12 @@ module.exports.getUsers = (req, res, next) => { // возвращает всех
     .catch(next); // создаст 500
 };
 
+module.exports.getInfoAboutCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.status(Ok).send({ data: user }))
+    .catch(next); // создаст 500
+};
+
 module.exports.getUser = (req, res, next) => { // возвращает пользователя по _id
   const { userId } = req.params;
   User.findById(userId)
@@ -101,19 +107,6 @@ module.exports.updateAvatar = (req, res, next) => { // обновляет ава
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при изменение аватара пользователя'));
-      } else {
-        next(err); // создаст 500
-      }
-    });
-};
-
-module.exports.getInfoAboutCurrentUser = (req, res, next) => {
-  User.findById(req.user._id)
-    .orFail(new NotFoundError(`Пользователь с указанным id '${req.user._id}' не найден`))
-    .then((user) => res.status(Ok).send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при запросе информации о пользователе'));
       } else {
         next(err); // создаст 500
       }
